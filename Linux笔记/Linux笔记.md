@@ -62,7 +62,7 @@
 	6. /ect
 		配置文件库，Linux系统的配置文件库就在这里面，包括自己应用的配置文件库(MySql)等等
 	7. /usr 
-		存放应用的目录 相当于programFiles
+		存放应用的目录 相当于programFiles 存放systemdtl的服务
 		/local
 			编译源码方式安装的程序
 	8. /boot
@@ -364,3 +364,87 @@ less模式的一些快捷键
 
 	3.tips 记得看看是不是修改的ens33 有个叫做 AUTO-ens33的网卡是NetworkManager自动生成的
 	4.当被networkManager整的很烦的时候可以 用 nmcli connection up ens33 重新加载下链接就好了
+
+### 第三节 Linux的进程信息
+
+
+3.1 进程的查看
+
+	1.使用ps指令查看进程 -a 显示终端所用的进程信息 -u 以用户的格式显示信息 -x显示后台运行进程的参数 一般ps -aux | more 方便查看
+	2.一些对应信息
+		USER: 进程所属的用户名称
+		PID:进程号
+		%CPU:进程占用CPU的百分比
+		%MEM:进程占用物理内存的百分比
+		VSZ:进程占用虚拟内存的大小(KB)
+		RSS:进程占用物理内存的大小(KB)
+		STAT:进程状态，S-代表睡眠 R-正在运行 D-短期等待 Z-僵死进程 T-被停止的线程
+		START:进程启动的时间 
+		TIME:进程使用CPU的时间 
+		COMMAND:进程启动所需要的命令和参数
+		PPID:当前进程的父进程
+	3.ps -ef 以全格式显示当前的进程
+	4.终止进程
+		4.1 kill 进程号 普通终止进程 kill -9 进程号 强制终止进程(如bash)
+		4.2 killall 进程号 强制终止当前进程以及子进程
+	5.进程树 pstree -u 以用户形式显示进程树 -p以进程号形式显示进程树
+	6.守护进程 服务本身就是进程 在后台运行 等待请求 称之为守护进程
+	7.service指令 service 服务名 [start,stop,reload,status]
+	8.在CentOs7.0后，很多服务不再使用Service，而是systemctl
+	9.service 指令管理的服务在/etc/init.d查看(init 初始)
+	10.setup修改自启动服务 tab切换 上下键切换 空格选中即可
+	11.chkconfig --list 列出chkconfig管理的服务 chkconfig --level n 服务名 on/off 在某个运行级别开启或关闭某个服务 设置后需要重启生效
+	12.systemctl指令 在centos7之后的大部分服务都用这个指令进行管理
+		12.1 查看所有服务 可以在/usr/lib/systemd/system目录下看 或者用指令 systemctl list-unit-file 指令查看所有服务名称和状态
+		12.2 服务状态 
+			masked 禁止自启动
+			static 禁止自启动 只能作为其它文件的依赖
+			enabled 已配置为自启动 
+			disabled 未配置为自启动
+		12.3 配置指令 
+			systemctl enabled [服务名] 设置自启动
+			systemctl disable [服务名] 关闭自启动
+			systemctl is-enabled [服务名] 查看是否设置自启动
+			systemctl enabled [服务名] 设置自启动
+			systemctl stop [服务名] 关闭服务
+			systemctl restart [服务名] 重启服务
+			systemctl status [服务名] 查看服务状态
+	13.防火墙(firewall相关指令)
+		13.1 防火墙的功能 外界程序需要访问内部服务的时候需要通过防火墙 只有防火墙注册了相应的端口外界程序才能访问服务
+		13.2 防火墙的指令
+			13.2.1 firewall-cmd --list 查看当前防火墙的服务
+			13.2.2 firewall-cmd --list-port 查看防火墙开的所有端口 
+			13.2.3 firewall-cmd --list-service 查看防火墙开的所有服务(比如ssh就默认开了)
+			13.2.4 firewall-cmd --permanent --add-port=端口号/协议 开放某个端口
+			13.2.5 firewall-cmd --permanent --query-port=端口号/协议 查看端口是否开放
+			13.2.6 firewall-cmd --permanent --remove-port=端口号/协议 关闭对应端口
+			13.2.7 firewall-cmd --reload 重载防火墙 对防火墙进行修改后都要重载一遍
+	14.top指令(我个人觉得像任务管理器)
+		14.1 top -d n 指定刷新时间(默认三秒) 
+		14.2 指标(翻译就行了)
+			top -21:34:06: top命令刷新进程的时间 
+			up:系统运行的时长 
+			user:当前linux系统上面的用户数 
+			load average: 负载值(三个数字相加(0.04+0.07+0.18)除以3的值>0.7说明负载很大)
+			Tasks:总进程数 
+			ruuning: 正在运行的进程数 
+			sleeping:休眠的进程数 
+			stopped:停止的进程数 
+			zombie:僵死的进程数 %(CPU): 
+			CPU负载百分比 
+			us:用户占用cpu百分比 
+			Mem:描述内存占用情况 
+			total:总共内存 
+			free 空余内存 
+			used：使用了的内存 
+			buff/cache：缓存 
+			Swap:描述交换区内存占用情况
+		14.3 输入top指令后的交互
+			14.3.1 P 按照CPU百分比占用排序进程 默认排序方式
+			14.3.2 M 按照内存使用排序
+			14.3.3 N 以PID(进程号)排序
+			14.3.4 q 退出
+			14.3.5 u 查找对应用户所属进程
+			14.4.6 k 删除对应进程号的进程 按9强制删除
+		15 netstat指令 查看网络连接 netstat -anp(没感觉到用处在哪) 
+		
